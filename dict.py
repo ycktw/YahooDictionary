@@ -1,12 +1,18 @@
 #!/usr/bin/env python3
 """
 YahooDictionary - Command line interface for Yahoo Dictionary
-Version: 1.0.1
+Version: 1.0.2
 GitHub: https://raw.githubusercontent.com/ycktw/YahooDictionary/refs/heads/master/dict.py
+
+DISCLAIMER:
+This tool is for personal learning and academic research only.
+Do NOT use for commercial crawling or large-scale data collection.
+The author is not responsible for misuse or violations of service terms.
 """
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 GITHUB_RAW_URL = "https://raw.githubusercontent.com/ycktw/YahooDictionary/refs/heads/master/dict.py"
+MIN_REQUEST_INTERVAL = 1.0  # 最少請求間隔（秒），避免伺服器壓力
 
 import sys
 import warnings
@@ -21,17 +27,33 @@ import time
 warnings.filterwarnings('ignore', category=DeprecationWarning)
 warnings.filterwarnings('ignore', category=FutureWarning)
 
+# 記錄最後一次請求的時間
+_last_request_time = 0
+
 def get_script_path():
     """取得當前 script 的完整路徑"""
     return os.path.abspath(__file__)
+
+def rate_limit():
+    """實現請求速率限制，避免短時間內發送過多請求"""
+    global _last_request_time
+    elapsed = time.time() - _last_request_time
+    if elapsed < MIN_REQUEST_INTERVAL:
+        sleep_time = MIN_REQUEST_INTERVAL - elapsed
+        time.sleep(sleep_time)
+    _last_request_time = time.time()
 
 def check_update():
     """檢查是否有新版本"""
     try:
         print("正在檢查更新...")
+        rate_limit()
+        
         # 加上時間戳記參數以繞過 CDN 緩存
         url = f"{GITHUB_RAW_URL}?t={int(time.time())}"
-        response = requests.get(url, timeout=10)
+        response = requests.get(url, timeout=10, headers={
+            'User-Agent': 'YahooDictionary/1.0 (Personal Learning Tool)'
+        })
         response.encoding = 'utf-8'
         
         # 從遠端版本提取版本號
@@ -67,9 +89,13 @@ def update_script():
         script_path = get_script_path()
         
         print("正在下載最新版本...")
+        rate_limit()
+        
         # 加上時間戳記參數以繞過 CDN 緩存
         url = f"{GITHUB_RAW_URL}?t={int(time.time())}"
-        response = requests.get(url, timeout=10)
+        response = requests.get(url, timeout=10, headers={
+            'User-Agent': 'YahooDictionary/1.0 (Personal Learning Tool)'
+        })
         response.encoding = 'utf-8'
         
         if response.status_code != 200:
@@ -125,10 +151,12 @@ def lookup_word(word):
         # Yahoo 字典的網址
         url = f"https://tw.dictionary.search.yahoo.com/search?p={word}"
         
+        # 設定 User-Agent 以標識此工具
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            'User-Agent': 'YahooDictionary/1.0 (Personal Learning Tool)'
         }
         
+        rate_limit()
         response = requests.get(url, headers=headers, timeout=10)
         response.encoding = 'utf-8'
         soup = BeautifulSoup(response.text, "html.parser")
@@ -209,6 +237,9 @@ def show_help():
   ./dict.py test
   ./dict.py hello
   ./dict.py --check-update
+
+⚠️  免責聲明：本工具僅供個人學習與學術研究使用。
+   請勿用於大規模商業爬蟲。
 """)
 
 def main():
