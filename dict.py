@@ -15,6 +15,7 @@ from bs4 import BeautifulSoup
 import os
 import shutil
 from pathlib import Path
+import time
 
 # 禁止不必要的警告
 warnings.filterwarnings('ignore', category=DeprecationWarning)
@@ -28,7 +29,9 @@ def check_update():
     """檢查是否有新版本"""
     try:
         print("正在檢查更新...")
-        response = requests.get(GITHUB_RAW_URL, timeout=10)
+        # 加上時間戳記參數以繞過 CDN 緩存
+        url = f"{GITHUB_RAW_URL}?t={int(time.time())}"
+        response = requests.get(url, timeout=10)
         response.encoding = 'utf-8'
         
         # 從遠端版本提取版本號
@@ -64,7 +67,9 @@ def update_script():
         script_path = get_script_path()
         
         print("正在下載最新版本...")
-        response = requests.get(GITHUB_RAW_URL, timeout=10)
+        # 加上時間戳記參數以繞過 CDN 緩存
+        url = f"{GITHUB_RAW_URL}?t={int(time.time())}"
+        response = requests.get(url, timeout=10)
         response.encoding = 'utf-8'
         
         if response.status_code != 200:
