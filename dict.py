@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 YahooDictionary - Command line interface for Yahoo Dictionary
-Version: 1.0.2
+Version: 1.0.3
 GitHub: https://raw.githubusercontent.com/ycktw/YahooDictionary/refs/heads/master/dict.py
 
 DISCLAIMER:
@@ -10,7 +10,7 @@ Do NOT use for commercial crawling or large-scale data collection.
 The author is not responsible for misuse or violations of service terms.
 """
 
-__version__ = "1.0.2"
+__version__ = "1.0.3"
 GITHUB_RAW_URL = "https://raw.githubusercontent.com/ycktw/YahooDictionary/refs/heads/master/dict.py"
 MIN_REQUEST_INTERVAL = 1.0  # 最少請求間隔（秒），避免伺服器壓力
 
@@ -26,6 +26,30 @@ import time
 # 禁止不必要的警告
 warnings.filterwarnings('ignore', category=DeprecationWarning)
 warnings.filterwarnings('ignore', category=FutureWarning)
+
+# ANSI 顏色代碼
+class Colors:
+    # 顏色定義
+    HEADER = '\033[95m'      # 紫紅色
+    BLUE = '\033[94m'        # 藍色
+    CYAN = '\033[96m'        # 青色
+    GREEN = '\033[92m'       # 綠色
+    YELLOW = '\033[93m'      # 黃色
+    RED = '\033[91m'         # 紅色
+    
+    # 文字效果
+    BOLD = '\033[1m'         # 加粗
+    UNDERLINE = '\033[4m'    # 下劃線
+    
+    # 重置
+    RESET = '\033[0m'
+    
+    # 複合樣式
+    WORD = f"{BOLD}{BLUE}"           # 單字：加粗藍色
+    PHONETIC = f"{GREEN}"            # 音標：綠色
+    POS = f"{YELLOW}"                # 詞性：黃色
+    SECTION = f"{HEADER}"            # 標題段：紫紅色
+    DETAIL_LABEL = f"{CYAN}"         # 詳細說明：青色
 
 # 記錄最後一次請求的時間
 _last_request_time = 0
@@ -168,18 +192,18 @@ def lookup_word(word):
             print(f"查詢錯誤：找不到 '{word}' 的結果")
             return False
         
-        # 印出英文單字
+        # 印出英文單字（加粗藍色）
         title = word_card.find('span', class_='fz-24')
         if title:
-            print(f"\n{title.get_text(strip=True)}")
+            print(f"\n{Colors.WORD}{title.get_text(strip=True)}{Colors.RESET}")
         
-        # 尋找音標
+        # 尋找音標（綠色）
         pronunciation_list = word_card.find('ul')
         if pronunciation_list:
             for li in pronunciation_list.find_all('li'):
                 pron_text = li.get_text(strip=True)
                 if pron_text and ('/' in pron_text or '[' in pron_text or 'K' in pron_text):
-                    print(f"  {pron_text}")
+                    print(f"  {Colors.PHONETIC}{pron_text}{Colors.RESET}")
                     break
         
         # 尋找詞性和意思 - 尋找所有 compList，第二個應該是詞性區塊
@@ -190,11 +214,11 @@ def lookup_word(word):
             items = comp_list.find_all('li')
             
             for item in items:
-                # 取得詞性
+                # 取得詞性（黃色）
                 pos_elem = item.find('div', class_='pos_button')
                 if pos_elem:
                     pos_text = pos_elem.get_text(strip=True)
-                    print(f"\n【{pos_text}】")
+                    print(f"\n{Colors.POS}【{pos_text}】{Colors.RESET}")
                 
                 # 取得中文意思
                 explanation = item.find('div', class_='dictionaryExplanation')
@@ -207,7 +231,7 @@ def lookup_word(word):
         if article_list:
             items = article_list.find_all('li')
             if items:
-                print(f"\n【詳細說明】")
+                print(f"\n{Colors.SECTION}【詳細說明】{Colors.RESET}")
                 for item in items:
                     text = item.get_text(strip=True)
                     if text:
