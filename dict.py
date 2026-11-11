@@ -75,9 +75,9 @@ def check_update():
         
         # 加上時間戳記參數以繞過 CDN 緩存
         url = f"{GITHUB_RAW_URL}?t={int(time.time())}"
-        response = requests.get(url, timeout=10, headers={
-            'User-Agent': 'YahooDictionary/1.0 (Personal Learning Tool)'
-        })
+        response = requests.get(url, timeout=10, headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        }, verify=False)
         response.encoding = 'utf-8'
         
         # 從遠端版本提取版本號
